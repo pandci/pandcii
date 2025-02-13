@@ -2,7 +2,8 @@
 <html>
 <head>
     <style>
-        /* Existing styles remain the same until the floating-photo animations */
+        /* Semua styling dari file original */
+        /* ... styles sampai dengan .floating-photo ... */
         body {
             margin: 0;
             padding: 0;
@@ -109,71 +110,9 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             border: 3px solid rgba(255, 255, 255, 0.8);
             z-index: 0;
-            transition: all 0.5s ease;
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
-        /* Animation patterns for 10 photos */
-        @keyframes float1 {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(400px, -200px) rotate(180deg); }
-            100% { transform: translate(0, 0) rotate(360deg); }
-        }
-
-        @keyframes float2 {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(-400px, 200px) rotate(-180deg); }
-            100% { transform: translate(0, 0) rotate(-360deg); }
-        }
-
-        @keyframes float3 {
-            0% { transform: translate(300px, 300px) rotate(0deg); }
-            50% { transform: translate(-300px, -300px) rotate(180deg); }
-            100% { transform: translate(300px, 300px) rotate(360deg); }
-        }
-
-        @keyframes float4 {
-            0% { transform: translate(-300px, -300px) rotate(0deg); }
-            50% { transform: translate(300px, 300px) rotate(-180deg); }
-            100% { transform: translate(-300px, -300px) rotate(-360deg); }
-        }
-
-        @keyframes float5 {
-            0% { transform: translate(0, -350px) rotate(0deg); }
-            50% { transform: translate(0, 350px) rotate(180deg); }
-            100% { transform: translate(0, -350px) rotate(360deg); }
-        }
-
-        @keyframes float6 {
-            0% { transform: translate(250px, -250px) rotate(0deg); }
-            50% { transform: translate(-250px, 250px) rotate(180deg); }
-            100% { transform: translate(250px, -250px) rotate(360deg); }
-        }
-
-        @keyframes float7 {
-            0% { transform: translate(-250px, 250px) rotate(0deg); }
-            50% { transform: translate(250px, -250px) rotate(-180deg); }
-            100% { transform: translate(-250px, 250px) rotate(-360deg); }
-        }
-
-        @keyframes float8 {
-            0% { transform: translate(200px, 0) rotate(0deg); }
-            50% { transform: translate(-200px, 0) rotate(180deg); }
-            100% { transform: translate(200px, 0) rotate(360deg); }
-        }
-
-        @keyframes float9 {
-            0% { transform: translate(0, 200px) rotate(0deg); }
-            50% { transform: translate(0, -200px) rotate(-180deg); }
-            100% { transform: translate(0, 200px) rotate(-360deg); }
-        }
-
-        @keyframes float10 {
-            0% { transform: translate(-200px, -200px) rotate(0deg); }
-            50% { transform: translate(200px, 200px) rotate(180deg); }
-            100% { transform: translate(-200px, -200px) rotate(360deg); }
-        }
-
-        /* Rest of your existing styles */
         .heart {
             position: relative;
             width: 100px;
@@ -275,27 +214,57 @@
             'foto10.jpg'
         ];
 
-        function createOrbitingPhoto(index) {
-            const photo = document.createElement('img');
-            photo.src = photos[index];
-            photo.className = 'floating-photo';
-            photo.style.opacity = '0';
-            photo.style.transform = 'scale(0)';
-            
-            photo.style.left = '50%';
-            photo.style.top = '50%';
-            photo.style.marginLeft = '-40px';
-            photo.style.marginTop = '-40px';
-            
-            document.body.appendChild(photo);
-            
-            setTimeout(() => {
-                photo.style.opacity = '1';
-                photo.style.transform = 'scale(1)';
-                photo.style.animation = `float${index + 1} ${8 + index * 1.5}s linear infinite`;
-            }, index * 150);
+        let bouncingPhotos = [];
 
-            return photo;
+        class BouncingPhoto {
+            constructor(src) {
+                this.element = document.createElement('img');
+                this.element.src = src;
+                this.element.className = 'floating-photo';
+                
+                // Random initial position
+                this.x = Math.random() * (window.innerWidth - 80);
+                this.y = Math.random() * (window.innerHeight - 80);
+                
+                // Random velocity (speed)
+                this.vx = (Math.random() - 0.5) * 5;
+                this.vy = (Math.random() - 0.5) * 5;
+                
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+                
+                document.body.appendChild(this.element);
+            }
+
+            update() {
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Tambahkan efek peredam gerakan (friction)
+                 this.vx *= 0.99; // Perlahan melambat
+                 this.vy *= 0.99;
+
+                // Bounce off walls
+                if (this.x <= 0 || this.x >= window.innerWidth - 80) {
+                    this.vx *= -1;
+                }
+                if (this.y <= 0 || this.y >= window.innerHeight - 80) {
+                    this.vy *= -1;
+                }
+
+                // Keep within bounds
+                this.x = Math.max(0, Math.min(this.x, window.innerWidth - 80));
+                this.y = Math.max(0, Math.min(this.y, window.innerHeight - 80));
+
+                // Update element position
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+            }
+
+            remove() {
+                this.element.remove();
+            }
         }
 
         function createParticle(x, y, type) {
@@ -350,8 +319,12 @@
             animate();
         }
 
-        let orbitingPhotos = [];
+        function animate() {
+            bouncingPhotos.forEach(photo => photo.update());
+            requestAnimationFrame(animate);
+        }
 
+        // Event listener untuk tombol trigger
         trigger.addEventListener('click', (e) => {
             const rect = trigger.getBoundingClientRect();
             const x = rect.left + rect.width / 2;
@@ -370,19 +343,19 @@
             setTimeout(() => card.classList.add('visible'), 500);
         });
 
+        // Event listener untuk card
         card.addEventListener('click', () => {
             isFlipped = !isFlipped;
             card.classList.toggle('flipped');
             
             if (isFlipped) {
-                orbitingPhotos = photos.map((_, index) => createOrbitingPhoto(index));
+                // Create new bouncing photos
+                bouncingPhotos = photos.map(photo => new BouncingPhoto(photo));
+                animate();
             } else {
-                orbitingPhotos.forEach(photo => {
-                    photo.style.opacity = '0';
-                    photo.style.transform = 'scale(0)';
-                    setTimeout(() => photo.remove(), 500);
-                });
-                orbitingPhotos = [];
+                // Remove all bouncing photos
+                bouncingPhotos.forEach(photo => photo.remove());
+                bouncingPhotos = [];
             }
         });
     </script>
