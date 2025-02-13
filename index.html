@@ -245,6 +245,10 @@
                  this.vx *= 0.99; // Perlahan melambat
                  this.vy *= 0.99;
 
+                 const minSpeed = 0.5;
+                 if (Math.abs(this.vx) < minSpeed) this.vx = Math.sign(this.vx) * minSpeed;
+                 if (Math.abs(this.vy) < minSpeed) this.vy = Math.sign(this.vy) * minSpeed;
+
                 // Bounce off walls
                 if (this.x <= 0 || this.x >= window.innerWidth - 80) {
                     this.vx *= -1;
